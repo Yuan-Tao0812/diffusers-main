@@ -32,7 +32,8 @@ import transformers
 from accelerate import Accelerator
 from accelerate.logging import get_logger
 from accelerate.utils import ProjectConfiguration, set_seed
-from datasets import load_dataset, Features, Image, Value
+from datasets import load_dataset, Features, Image, Value, DatasetDict
+import json
 from huggingface_hub import create_repo, upload_folder
 from packaging import version
 from PIL import Image
@@ -598,6 +599,68 @@ def parse_args(input_args=None):
     return args
 
 
+# 在main函数之前添加这个函数
+def create_dataset_from_metadata(train_data_dir):
+    """使用Dataset.from_dict创建数据集，绕过load_dataset的问题"""
+    metadata_file = os.path.join(train_data_dir, "metadata.jsonl")
+
+    print(f"从metadata创建数据集: {metadata_file}")
+
+    # 构建数据字典
+    data_dict = {
+        "image": [],
+        "conditioning_image": [],
+        "text": []
+    }
+
+    successful_count = 0
+    error_count = 0
+
+    with open(metadata_file, 'r') as f:
+        for line_num, line in enumerate(f, 1):
+            try:
+                data = json.loads(line.strip())
+
+                # 构建完整路径
+                img_path = os.path.join(train_data_dir, data['file_name'])
+                cond_path = os.path.join(train_data_dir, data['conditioning_image'])
+
+                # 验证文件存在
+                if os.path.exists(img_path) and os.path.exists(cond_path):
+                    data_dict["image"].append(img_path)
+                    data_dict["conditioning_image"].append(cond_path)
+                    data_dict["text"].append(data['text'])
+                    successful_count += 1
+                else:
+                    error_count += 1
+                    if error_count <= 5:  # 只显示前5个错误
+                        print(f"警告: 文件不存在 (行{line_num}): {img_path} 或 {cond_path}")
+            except Exception as e:
+                error_count += 1
+                if error_count <= 5:
+                    print(f"警告: 解析错误 (行{line_num}): {e}")
+
+    print(f"成功加载 {successful_count} 条训练数据")
+    if error_count > 0:
+        print(f"跳过 {error_count} 条有问题的数据")
+
+    if successful_count == 0:
+        raise ValueError("没有有效的训练数据!")
+
+    # 定义特征
+    features = Features({
+        "image": Image(),
+        "conditioning_image": Image(),
+        "text": Value("string")
+    })
+
+    # 创建数据集
+    train_dataset = Dataset.from_dict(data_dict, features=features)
+
+    # 返回DatasetDict格式（为了兼容原代码）
+    return DatasetDict({"train": train_dataset})
+
+
 def make_train_dataset(args, tokenizer, accelerator):
     # Get the datasets: you can either provide your own training and evaluation files (see below)
     # or specify a Dataset from the hub (the dataset will be downloaded automatically from the datasets Hub).
@@ -613,7 +676,13 @@ def make_train_dataset(args, tokenizer, accelerator):
             data_dir=args.train_data_dir,
         )
     else:
-        data_files = {}
+        if args.train_data_dir is not None:
+            print("使用Dataset.from_dict方法创建数据集...")
+            dataset = create_dataset_from_metadata(args.train_data_dir)
+            print("✅ 数据集创建成功")
+        else:
+            raise ValueError("必须提供 --dataset_name 或 --train_data_dir")
+        '''data_files = {}
         if args.train_data_dir is not None:
             data_files["train"] = os.path.join(args.train_data_dir, "**")
         features = Features({
@@ -626,7 +695,7 @@ def make_train_dataset(args, tokenizer, accelerator):
             data_files=data_files,
             cache_dir=args.cache_dir,
             features=features,
-        )
+        )'''
         # See more about loading custom images at
         # https://huggingface.co/docs/datasets/v2.0.0/en/dataset_script
 
