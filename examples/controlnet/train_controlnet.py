@@ -920,8 +920,6 @@ def main(args):
     )
     print("KALE")
     train_dataset = make_train_dataset(args, tokenizer, accelerator)
-    print("Dataset loaded:", dataset)
-    print("First row:", dataset[0])
     train_dataloader = torch.utils.data.DataLoader(
         train_dataset,
         shuffle=True,
