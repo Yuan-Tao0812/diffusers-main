@@ -618,7 +618,7 @@ def make_train_dataset(args, tokenizer, accelerator):
             data_files["train"] = os.path.join(args.train_data_dir, "**")
         dataset = load_dataset(
             "imagefolder",
-            data_dir=data_files,
+            data_files=data_files,
             cache_dir=args.cache_dir,
         )
         # See more about loading custom images at
