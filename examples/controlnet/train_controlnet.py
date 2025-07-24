@@ -32,7 +32,7 @@ import transformers
 from accelerate import Accelerator
 from accelerate.logging import get_logger
 from accelerate.utils import ProjectConfiguration, set_seed
-from datasets import load_dataset
+from datasets import load_dataset, Features, Image, Value
 from huggingface_hub import create_repo, upload_folder
 from packaging import version
 from PIL import Image
@@ -616,10 +616,16 @@ def make_train_dataset(args, tokenizer, accelerator):
         data_files = {}
         if args.train_data_dir is not None:
             data_files["train"] = os.path.join(args.train_data_dir, "**")
+        features = Features({
+            "image": Image(),
+            "conditioning_image": Image(),
+            "text": Value("string")
+        })
         dataset = load_dataset(
             "imagefolder",
             data_files=data_files,
             cache_dir=args.cache_dir,
+            features=features,
         )
         # See more about loading custom images at
         # https://huggingface.co/docs/datasets/v2.0.0/en/dataset_script
@@ -924,7 +930,7 @@ def main(args):
         weight_decay=args.adam_weight_decay,
         eps=args.adam_epsilon,
     )
-    print("KALE")
+
     train_dataset = make_train_dataset(args, tokenizer, accelerator)
     train_dataloader = torch.utils.data.DataLoader(
         train_dataset,
