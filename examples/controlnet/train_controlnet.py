@@ -613,13 +613,14 @@ def make_train_dataset(args, tokenizer, accelerator):
             data_dir=args.train_data_dir,
         )
     else:
+        data_files = {}
         if args.train_data_dir is not None:
-            dataset = load_dataset(
-                "imagefolder",
-                args.train_data_dir,
-                split="train",
-                cache_dir=args.cache_dir,
-            )
+            data_files["train"] = os.path.join(args.train_data_dir, "**")
+        dataset = load_dataset(
+            "imagefolder",
+            data_dir=data_files,
+            cache_dir=args.cache_dir,
+        )
         # See more about loading custom images at
         # https://huggingface.co/docs/datasets/v2.0.0/en/dataset_script
 
