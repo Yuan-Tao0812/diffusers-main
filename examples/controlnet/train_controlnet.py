@@ -733,8 +733,6 @@ def collate_fn(examples):
 
 
 def main(args):
-    print("train_data_dir:", args.train_data_dir)
-    print("cache_dir:", args.cache_dir)
     if args.report_to == "wandb" and args.hub_token is not None:
         raise ValueError(
             "You cannot use both --report_to=wandb and --hub_token due to a security risk of exposing your token."
@@ -919,9 +917,10 @@ def main(args):
         weight_decay=args.adam_weight_decay,
         eps=args.adam_epsilon,
     )
-
+    print("KALE")
     train_dataset = make_train_dataset(args, tokenizer, accelerator)
-
+    print("Dataset loaded:", dataset)
+    print("First row:", dataset[0])
     train_dataloader = torch.utils.data.DataLoader(
         train_dataset,
         shuffle=True,
