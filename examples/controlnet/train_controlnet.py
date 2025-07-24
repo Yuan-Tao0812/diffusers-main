@@ -696,6 +696,12 @@ def make_train_dataset(args, tokenizer, accelerator):
     )
 
     def preprocess_train(examples):
+        print("=== DEBUG INFO ===")
+        print(f"image[0] 类型: {type(examples[image_column][0])}")
+        print(f"conditioning_image[0] 类型: {type(examples[conditioning_image_column][0])}")
+        print(f"image[0] 值: {examples[image_column][0]}")
+        print(f"conditioning_image[0] 值: {examples[conditioning_image_column][0]}")
+        print("=================")
         images = [image.convert("RGB") for image in examples[image_column]]
         images = [image_transforms(image) for image in images]
 
