@@ -733,6 +733,8 @@ def collate_fn(examples):
 
 
 def main(args):
+    print("train_data_dir:", args.train_data_dir)
+    print("cache_dir:", args.cache_dir)
     if args.report_to == "wandb" and args.hub_token is not None:
         raise ValueError(
             "You cannot use both --report_to=wandb and --hub_token due to a security risk of exposing your token."
