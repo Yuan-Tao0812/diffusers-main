@@ -32,7 +32,7 @@ import transformers
 from accelerate import Accelerator
 from accelerate.logging import get_logger
 from accelerate.utils import ProjectConfiguration, set_seed
-from datasets import load_dataset, Features, Value, DatasetDict
+from datasets import load_dataset, Features, Value, DatasetDict, Dataset
 from datasets import Image as DatasetImage
 import json
 from huggingface_hub import create_repo, upload_folder
