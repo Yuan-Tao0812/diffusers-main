@@ -32,7 +32,8 @@ import transformers
 from accelerate import Accelerator
 from accelerate.logging import get_logger
 from accelerate.utils import ProjectConfiguration, set_seed
-from datasets import load_dataset, Features, Image, Value, DatasetDict
+from datasets import load_dataset, Features, Value, DatasetDict
+from datasets import Image as DatasetImage
 import json
 from huggingface_hub import create_repo, upload_folder
 from packaging import version
@@ -649,8 +650,8 @@ def create_dataset_from_metadata(train_data_dir):
 
     # 定义特征
     features = Features({
-        "image": Image(),
-        "conditioning_image": Image(),
+        "image": DatasetImage(),
+        "conditioning_image": DatasetImage(),
         "text": Value("string")
     })
 
